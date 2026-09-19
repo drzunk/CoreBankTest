@@ -19,8 +19,11 @@ public class ParabankRealTest {
 
     @BeforeClass
     public void prepareAccounts() {
-        System.out.println("\n--- [TIỀN TRẠM] Lấy thông tin tài khoản ---");
+        // [BẬT CAMERA]: Dòng này sẽ đính kèm tự động mọi Request/Response vào Allure Report
+        RestAssured.filters(new io.qameta.allure.restassured.AllureRestAssured());
 
+        System.out.println("\n--- [TIỀN TRẠM] Lấy thông tin tài khoản ---");
+        // ... (Giữ nguyên phần code lấy ID bên dưới của bạn) ...
         // 1. Đăng nhập để lấy Customer ID
         Response loginRes = RestAssured.given()
                 .accept(ContentType.JSON)

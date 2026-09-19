@@ -1,24 +1,38 @@
 name: Automation API Test (ParaBank)
 
-# Kích hoạt máy ảo chạy tự động mỗi khi có code mới đẩy lên nhánh 'main'
 on:
   push:
     branches: [ "main" ]
 
 jobs:
   run-api-tests:
-    runs-on: ubuntu-latest # Thuê 1 máy ảo hệ điều hành Ubuntu mới nhất
-
+    runs-on: ubuntu-latest
     steps:
-      - name: 1. Clone Code từ GitHub về máy ảo
+      - name: 1. Clone Code từ GitHub
         uses: actions/checkout@v4
 
-      - name: 2. Cài đặt Java 17 (Cùng môi trường với máy local của bạn)
+      - name: 2. Cài đặt Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
 
-      - name: 3. Ra lệnh chạy Test tự động
+      - name: 3. Ra lệnh chạy Test tự động (Tạo file log Allure)
         run: mvn clean test
+        continue-on-error: true # Dù test pass hay fail vẫn phải đi tiếp để xuất báo cáo
+
+      - name: 4. Đóng gói Báo cáo Allure HTML
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        with:
+          allure_results: allure-results
+          allure_history: allure-history
+
+      - name: 5. Xuất bản web Báo cáo lên GitHub Pages (Public)
+        uses: peaceiris/actions-gh-pages@v3
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
