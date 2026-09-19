@@ -49,8 +49,15 @@ public class HybridTransferTest {
 
         // 4. Khởi động Webdriver chuẩn bị mở Chrome
         io.github.bonigarcia.wdm.WebDriverManager.chromedriver().setup();
-        driver = new org.openqa.selenium.chrome.ChromeDriver();
-        driver.manage().window().maximize(); // Mở to toàn màn hình
+
+        // --- THÊM CHẾ ĐỘ TÀNG HÌNH (HEADLESS) CHO CI/CD ---
+        org.openqa.selenium.chrome.ChromeOptions options = new org.openqa.selenium.chrome.ChromeOptions();
+        options.addArguments("--headless=new"); // Chạy ngầm không cần màn hình
+        options.addArguments("--no-sandbox"); // Vượt rào bảo mật Linux
+        options.addArguments("--disable-dev-shm-usage"); // Tránh lỗi tràn RAM trên server
+
+        driver = new org.openqa.selenium.chrome.ChromeDriver(options);
+        // Không cần driver.manage().window().maximize(); nữa vì chạy ngầm không có cửa sổ
     }
 
     // --- KHAI BÁO DATA PROVIDER (Các ranh giới nguy hiểm) ---
