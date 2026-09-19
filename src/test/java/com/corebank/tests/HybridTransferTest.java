@@ -1,11 +1,17 @@
 package com.corebank.tests;
 
+import com.corebank.pages.LoginPage;
+import com.corebank.pages.TransferPage;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 public class HybridTransferTest {
@@ -27,14 +33,12 @@ public class HybridTransferTest {
         Response loginRes = RestAssured.given()
                 .accept(io.restassured.http.ContentType.JSON)
                 .get("https://parabank.parasoft.com/parabank/services/bank/login/" + myUser + "/" + myPass);
-        // JSON không có vỏ, lấy thẳng "id"
         customerId = loginRes.jsonPath().getInt("id");
 
         // 2. Bắn API Lấy tài khoản gốc
         Response accountsRes = RestAssured.given()
                 .accept(io.restassured.http.ContentType.JSON)
                 .get("https://parabank.parasoft.com/parabank/services/bank/customers/" + customerId + "/accounts");
-        // JSON trả về một Mảng (Array), lấy phần tử [0].id
         accountId1 = accountsRes.jsonPath().getString("[0].id");
 
         // 3. Bắn API Tạo tài khoản mới tinh
@@ -42,32 +46,35 @@ public class HybridTransferTest {
                 .accept(io.restassured.http.ContentType.JSON)
                 .post("https://parabank.parasoft.com/parabank/services/bank/createAccount?customerId="
                         + customerId + "&newAccountType=1&fromAccountId=" + accountId1);
-        // JSON không có vỏ, lấy thẳng "id"
         accountId2 = newAccRes.jsonPath().getString("id");
 
         System.out.println("[API] Xong! TK Nguồn: " + accountId1 + " | TK Nhận mới tạo: " + accountId2);
 
-        // 4. Khởi động Webdriver chuẩn bị mở Chrome
-        io.github.bonigarcia.wdm.WebDriverManager.chromedriver().setup();
+        // 4. Khởi động Webdriver với Cấu hình Thông minh (Smart Config)
+        WebDriverManager.chromedriver().setup();
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
 
-        // --- THÊM CHẾ ĐỘ TÀNG HÌNH (HEADLESS) CHO CI/CD ---
-        org.openqa.selenium.chrome.ChromeOptions options = new org.openqa.selenium.chrome.ChromeOptions();
-        options.addArguments("--headless=new"); // Chạy ngầm không cần màn hình
-        options.addArguments("--no-sandbox"); // Vượt rào bảo mật Linux
-        options.addArguments("--disable-dev-shm-usage"); // Tránh lỗi tràn RAM trên server
+        // Phát hiện nếu đang chạy trên máy chủ CI/CD (GitHub) thì Tàng hình (Headless)
+        if (System.getenv("GITHUB_ACTIONS") != null) {
+            options.addArguments("--headless=new");
+        } else {
+            // Còn chạy ở máy bạn (Local) thì mở to màn hình để xem cho rõ
+            options.addArguments("--start-maximized");
+        }
 
-        driver = new org.openqa.selenium.chrome.ChromeDriver(options);
-        // Không cần driver.manage().window().maximize(); nữa vì chạy ngầm không có cửa sổ
+        driver = new ChromeDriver(options);
     }
 
     // --- KHAI BÁO DATA PROVIDER (Các ranh giới nguy hiểm) ---
-    @org.testng.annotations.DataProvider(name = "limitTestData")
+    @DataProvider(name = "limitTestData")
     public Object[][] getLimitData() {
-        return new Object[][]{
-                {"1999", "Lỗi: Số tiền dưới mức tối thiểu 2000 VND"},
-                {"5000000", "Chuyển thành công (Dưới 10tr - Không cần FaceID)"},
-                {"10000000", "Chuyển thành công (Chạm mốc 10tr - Bật FaceID)"},
-                {"300000001", "Lỗi: Vượt hạn mức 300tr của tài khoản Standard"}
+        return new Object[][] {
+                { "1999", "Lỗi: Số tiền dưới mức tối thiểu 2000 VND" },
+                { "5000000", "Chuyển thành công (Dưới 10tr - Không cần FaceID)" },
+                { "10000000", "Chuyển thành công (Chạm mốc 10tr - Bật FaceID)" },
+                { "300000001", "Lỗi: Vượt hạn mức 300tr của tài khoản Standard" }
         };
     }
 
@@ -76,8 +83,8 @@ public class HybridTransferTest {
     public void testTransferLimits(String amountToTransfer, String expectedBehavior) throws InterruptedException {
         System.out.println("\n--- [UI] ĐANG TEST KỊCH BẢN: " + expectedBehavior + " với số tiền: " + amountToTransfer + "$ ---");
 
-        com.corebank.pages.LoginPage loginPage = new com.corebank.pages.LoginPage(driver);
-        com.corebank.pages.TransferPage transferPage = new com.corebank.pages.TransferPage(driver);
+        LoginPage loginPage = new LoginPage(driver);
+        TransferPage transferPage = new TransferPage(driver);
 
         // 1. Đăng nhập
         loginPage.openPage();
@@ -88,9 +95,6 @@ public class HybridTransferTest {
         transferPage.transferMoney(amountToTransfer, accountId1, accountId2);
 
         // 3. Kiểm thử (Assert)
-        // Vì ParaBank là hệ thống giả lập nên số tiền nào nó cũng cho qua hết (kể cả âm tiền).
-        // Trong thực tế, chúng ta sẽ viết code IF - ELSE ở đây để kiểm tra từng luồng.
-        // Tạm thời ở đây ta vẫn Verify chữ Transfer Complete để kịch bản chạy mượt mà.
         Assert.assertTrue(transferPage.isTransferComplete(), "Lỗi: Chuyển tiền thất bại tại kịch bản " + expectedBehavior);
         System.out.println("[UI] Pass kịch bản: " + expectedBehavior);
 
@@ -102,11 +106,10 @@ public class HybridTransferTest {
     public void teardown() {
         System.out.println("\n--- [TEARDOWN] Dọn dẹp chiến trường ---");
 
-        // Dùng API làm "Bút toán đảo": Trả tiền về chỗ cũ để cân bằng sổ EOD
-        // Vì chạy 4 lần nên nhân 4 số tiền lên (Demo)
+        // Dùng API làm "Bút toán đảo": Trả tổng số tiền về chỗ cũ để cân bằng sổ sách
         RestAssured.given()
                 .post("https://parabank.parasoft.com/parabank/services/bank/transfer?fromAccountId="
-                        + accountId2 + "&toAccountId=" + accountId1 + "&amount=400000000");
+                        + accountId2 + "&toAccountId=" + accountId1 + "&amount=315001999");
         System.out.println("[API] Đã thực hiện Bút toán đảo để cân bằng sổ sách!");
 
         if (driver != null) {
