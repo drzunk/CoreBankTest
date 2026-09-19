@@ -65,6 +65,18 @@
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.36</version>
         </dependency>
+        <!-- Selenium WebDriver (Dành cho Web UI Automation) -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>4.21.0</version>
+        </dependency>
+        <!-- Webdriver Manager (Tự động tải Chrome/Edge Driver) -->
+        <dependency>
+            <groupId>io.github.bonigarcia</groupId>
+            <artifactId>webdrivermanager</artifactId>
+            <version>5.8.0</version>
+        </dependency>
     </dependencies>
 
     <build>
