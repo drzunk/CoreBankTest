@@ -10,8 +10,8 @@ import org.testng.annotations.Test;
 
 public class ParabankRealTest {
 
-    private String myUser = "dungda4";
-    private String myPass = "123456aA@";
+    private String myUser = "john";
+    private String myPass = "demo";
 
     private int customerId;
     private int accountId1;
