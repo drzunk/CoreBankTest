@@ -1,0 +1,7 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","3535","Kiểm tra Đăng nhập Data-Driven","Surefire suite","2026-09-19","passed","2026-09-19","com.corebank.tests.LoginAPITest","Surefire test","com.corebank.tests.LoginAPITest","testLogin"
+"","139","Kiểm tra Đăng nhập Data-Driven","Surefire suite","2026-09-19","passed","2026-09-19","com.corebank.tests.LoginAPITest","Surefire test","com.corebank.tests.LoginAPITest","testLogin"
+"","124","Test Đăng nhập bằng tài khoản ảo vừa tạo","Surefire suite","2026-09-19","passed","2026-09-19","com.corebank.tests.IsolatedLoginTest","Surefire test","com.corebank.tests.IsolatedLoginTest","testLoginWithFreshData"
+"","126","Kiểm tra Đăng nhập Data-Driven","Surefire suite","2026-09-19","passed","2026-09-19","com.corebank.tests.LoginAPITest","Surefire test","com.corebank.tests.LoginAPITest","testLogin"
+"","262","Kiểm tra Đăng nhập Data-Driven","Surefire suite","2026-09-19","passed","2026-09-19","com.corebank.tests.LoginAPITest","Surefire test","com.corebank.tests.LoginAPITest","testLogin"
+"","158","Test tính năng Chuyển tiền (Transfer Funds)","Surefire suite","2026-09-19","passed","2026-09-19","com.corebank.tests.ParabankRealTest","Surefire test","com.corebank.tests.ParabankRealTest","testMoneyTransfer"
