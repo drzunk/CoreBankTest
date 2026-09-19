@@ -1,0 +1,24 @@
+name: Automation API Test (ParaBank)
+
+# Kích hoạt máy ảo chạy tự động mỗi khi có code mới đẩy lên nhánh 'main'
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  run-api-tests:
+    runs-on: ubuntu-latest # Thuê 1 máy ảo hệ điều hành Ubuntu mới nhất
+
+    steps:
+      - name: 1. Clone Code từ GitHub về máy ảo
+        uses: actions/checkout@v4
+
+      - name: 2. Cài đặt Java 17 (Cùng môi trường với máy local của bạn)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: 3. Ra lệnh chạy Test tự động
+        run: mvn clean test
