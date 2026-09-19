@@ -1,0 +1,1 @@
+{"uuid":"eb63dbc7-5ae0-4620-8174-2e83f1e4397b","name":"com.corebank.tests.ParabankRealTest","children":["e60e8ca6-dbaa-49be-b508-b545920efe77"],"befores":[{"name":"prepareAccounts","status":"passed","stage":"finished","description":"","steps":[],"attachments":[],"parameters":[],"start":1789825557648,"stop":1789825558752}],"afters":[],"start":1789825551092,"stop":1789825559391}
