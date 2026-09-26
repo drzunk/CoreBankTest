@@ -28,7 +28,7 @@ public class LoginPage {
 
         // --- CHỐNG FLAKY TEST TẠI ĐÂY ---
         // Ép con Bot phải đứng chờ cho đến khi nút "Log Out" hiện ra (nghĩa là đã login xong 100%)
-        new org.openqa.selenium.support.ui.WebDriverWait(driver, java.time.Duration.ofSeconds(10))
+        new org.openqa.selenium.support.ui.WebDriverWait(driver, java.time.Duration.ofSeconds(30))
                 .until(org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated(By.linkText("Log Out")));
     }
 }

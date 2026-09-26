@@ -29,11 +29,12 @@ public class TransferPage {
     }
 
     // 3. Các hành động (Actions)
-    public void goToTransferFunds() throws InterruptedException {
+    public void goToTransferFunds(String fromAccId) {
         wait.until(ExpectedConditions.elementToBeClickable(menuTransfer)).click();
         wait.until(ExpectedConditions.visibilityOfElementLocated(titleTransfer));
-        // Đợi 2 giây cho AJAX tải xong danh sách tài khoản
-        Thread.sleep(2000);
+
+        // --- CHỐNG FLAKY: Chờ đến khi Dropdown thực sự có chứa số tài khoản ---
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(ddlFromAccount, fromAccId));
     }
 
     public void transferMoney(String amount, String fromAccId, String toAccId) {
@@ -50,4 +51,13 @@ public class TransferPage {
         WebElement successElement = wait.until(ExpectedConditions.visibilityOfElementLocated(msgSuccess));
         return successElement.isDisplayed();
     }
+
+    public String getResultMessage(String expectedMessage) {
+        // Chờ ĐỘNG (tối đa 10s) cho đến khi câu expectedMessage XUẤT HIỆN trong thẻ <body>
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(By.tagName("body"), expectedMessage));
+
+        // Sau khi đợi thành công, lấy toàn bộ Text của body trả về
+        return driver.findElement(By.tagName("body")).getText();
+    }
+
 }

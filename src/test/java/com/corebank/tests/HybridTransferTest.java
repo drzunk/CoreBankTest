@@ -2,6 +2,7 @@ package com.corebank.tests;
 
 import com.corebank.pages.LoginPage;
 import com.corebank.pages.TransferPage;
+import com.corebank.utils.ExcelUtils;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
@@ -9,10 +10,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 public class HybridTransferTest {
     // Data cho API
@@ -70,38 +68,41 @@ public class HybridTransferTest {
     // --- KHAI BÁO DATA PROVIDER (Các ranh giới nguy hiểm) ---
     @DataProvider(name = "limitTestData")
     public Object[][] getLimitData() {
-        return new Object[][] {
-                { "1999", "Lỗi: Số tiền dưới mức tối thiểu 2000 VND" },
-                { "5000000", "Chuyển thành công (Dưới 10tr - Không cần FaceID)" },
-                { "10000000", "Chuyển thành công (Chạm mốc 10tr - Bật FaceID)" },
-                { "300000001", "Lỗi: Vượt hạn mức 300tr của tài khoản Standard" }
-        };
+        // user.dir tự động lấy đường dẫn root của project (Chạy trên Windows, Mac hay Linux GitHub đều đúng)
+        String filepath = System.getProperty("user.dir") + "/src/test/resources/testdata/TransferData.xlsx";
+        String sheetname = "Sheet1";
+
+        return ExcelUtils.getTestData(filepath, sheetname);
     }
 
-    // --- TIÊM DATA PROVIDER VÀO HÀM TEST ---
     @Test(dataProvider = "limitTestData")
-    public void testTransferLimits(String amountToTransfer, String expectedBehavior) throws InterruptedException {
+    public void testTransferLimits(String testCaseName, String amountToTransfer, String expectedBehavior) {
+        System.out.println("Đang chạy kịch bản: " + testCaseName);
         System.out.println("\n--- [UI] ĐANG TEST KỊCH BẢN: " + expectedBehavior + " với số tiền: " + amountToTransfer + "$ ---");
 
         LoginPage loginPage = new LoginPage(driver);
         TransferPage transferPage = new TransferPage(driver);
 
-        // 1. Đăng nhập
         loginPage.openPage();
         loginPage.login(myUser, myPass);
 
-        // 2. Chuyển tiền
-        transferPage.goToTransferFunds();
+        transferPage.goToTransferFunds(accountId1);
         transferPage.transferMoney(amountToTransfer, accountId1, accountId2);
 
-        // 3. Kiểm thử (Assert)
-        Assert.assertTrue(transferPage.isTransferComplete(), "Lỗi: Chuyển tiền thất bại tại kịch bản " + expectedBehavior);
-        System.out.println("[UI] Pass kịch bản: " + expectedBehavior);
+        // Chú ý: Phải truyền tham số expectedBehavior vào hàm này
+        // Truyền câu mong đợi vào để hàm kia biết đường mà "đợi"
+        String actualMessage = transferPage.getResultMessage(expectedBehavior);
 
-        // 4. ĐĂNG XUẤT (Để dọn dẹp trình duyệt cho lần chạy DataProvider tiếp theo)
+        // Assert kiểm tra chứa đựng
+        Assert.assertTrue(actualMessage.contains(expectedBehavior),
+                "Lỗi: Không tìm thấy câu '" + expectedBehavior + "' trên màn hình!");} // <-- ĐÓNG NGOẶC CHO HÀM @Test Ở ĐÂY
+
+    // TẠO HÀM @AfterMethod NGANG HÀNG BÊN DƯỚI
+    @AfterMethod
+    public void cleanUpLession() {
+        // Hàm này sẽ ĐẢM BẢO luôn Logout dù Test Pass hay Fail
         driver.get("https://parabank.parasoft.com/parabank/logout.htm");
     }
-
     @AfterClass
     public void teardown() {
         System.out.println("\n--- [TEARDOWN] Dọn dẹp chiến trường ---");
